@@ -1,0 +1,16 @@
+QR Vakbekwaam Blijven v1.0
+
+Open index.html om de app te testen.
+
+In deze versie:
+- PANTHER 6x6 training
+- directe feedback en score
+- dashboard met leerbehoefte per onderwerp
+- eenvoudige beheerfunctie om vragen toe te voegen
+- CSV-export
+- QR-generator voor het uiteindelijke webadres
+
+Let op:
+De scores worden nu lokaal in de browser opgeslagen. Voor een centraal dashboard van meerdere telefoons is versie 2 met een online database nodig.
+
+De PANTHER-voorbeeldvragen zijn gebaseerd op openbare Rosenbauer-informatie. Controleer voertuig-specifieke waarden altijd tegen jullie eigen goedgekeurde documentatie voordat je ze als KPI-voorbereiding gebruikt.

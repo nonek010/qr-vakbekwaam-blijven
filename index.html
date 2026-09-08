@@ -80,7 +80,74 @@ extra_instruction:v.value==="Ja",
 instruction_topic:$("needTopic").value.trim()
 })
 }).catch(err=>console.error("Supabase fout:",err));show("dashboard")};$("again").onclick=()=>pickMode(run.m)}
-function dash(){let rs=JSON.parse(localStorage.getItem("results")||"[]");$("count").textContent=rs.length;$("avg").textContent=rs.length?Math.round(rs.reduce((s,r)=>s+r.score,0)/rs.length)+"%":"–";let cats={},qs={},needs=[];rs.forEach(r=>{Object.entries(r.cats).forEach(([k,v])=>{cats[k]??={ok:0,n:0};cats[k].ok+=v.ok;cats[k].n+=v.n});r.answers.forEach(a=>{if(!a.correct){qs[a.q]??={n:0,cat:a.cat};qs[a.q].n++}});if(r.instructionNeed)needs.push(r.instructionNeed)});let arr=Object.entries(cats).map(([k,v])=>[k,Math.round(v.ok/v.n*100)]).sort((a,b)=>a[1]-b[1]);$("weak").textContent=arr.length?arr[0][0]+" ("+arr[0][1]+"%)":"–";$("bars").innerHTML=arr.map(x=>"<p><b>"+x[0]+"</b> "+x[1]+"%</p><div class='bar'><span style='width:"+x[1]+"%'></span></div>").join("")||"<p class='small'>Nog geen resultaten.</p>";let worst=Object.entries(qs).sort((a,b)=>b[1].n-a[1].n).slice(0,5);$("wrongQs").innerHTML=worst.length?worst.map(x=>"<p><b>"+x[0]+"</b><br><span class='small'>"+x[1].n+" keer fout • "+x[1].cat+"</span></p>").join(""):"<p class='small'>Nog geen fouten geregistreerd.</p>";$("needs").innerHTML=needs.length?needs.map(x=>"<p>"+x.answer+(x.topic?" — "+x.topic:"")+"</p>").join(""):"<p class='small'>Nog geen antwoorden.</p>"}
+async function dash(){
+  try{
+    const response=await fetch(
+      SUPABASE_URL+"/rest/v1/quiz_results?select=*&order=created_at.desc",
+      {
+        headers:{
+          "apikey":SUPABASE_KEY,
+          "Authorization":"Bearer "+SUPABASE_KEY
+        }
+      }
+    );
+
+    if(!response.ok) throw new Error("Supabase fout: "+response.status);
+
+    const rs=await response.json();
+
+    $("count").textContent=rs.length;
+
+    $("avg").textContent=rs.length
+      ? Math.round(rs.reduce((s,r)=>s+(r.percentage||0),0)/rs.length)+"%"
+      : "–";
+
+    let topics={};
+    rs.forEach(r=>{
+      if(r.wrong_topics){
+        r.wrong_topics.split(",").forEach(t=>{
+          t=t.trim();
+          if(t) topics[t]=(topics[t]||0)+1;
+        });
+      }
+    });
+
+    let arr=Object.entries(topics).sort((a,b)=>b[1]-a[1]);
+
+    $("weak").textContent=arr.length
+      ? arr[0][0]+" ("+arr[0][1]+"× fout)"
+      : "–";
+
+    $("bars").innerHTML=arr.length
+      ? arr.map(x=>
+          "<p><b>"+x[0]+"</b> — "+x[1]+"× fout</p>"
+        ).join("")
+      : "<p class='small'>Nog geen fouten geregistreerd.</p>";
+
+    $("wrongQs").innerHTML=arr.length
+      ? arr.slice(0,5).map(x=>
+          "<p><b>"+x[0]+"</b><br><span class='small'>"+
+          x[1]+" keer als fout onderwerp geregistreerd</span></p>"
+        ).join("")
+      : "<p class='small'>Nog geen fouten geregistreerd.</p>";
+
+    let needs=rs.filter(r=>r.extra_instruction===true);
+
+    $("needs").innerHTML=needs.length
+      ? needs.map(r=>
+          "<p><b>Ja</b>"+
+          (r.instruction_topic ? " — "+r.instruction_topic : "")+
+          "</p>"
+        ).join("")
+      : "<p class='small'>Geen extra instructiebehoefte geregistreerd.</p>";
+
+  }catch(err){
+    console.error(err);
+    $("count").textContent="!";
+    $("avg").textContent="–";
+    $("weak").textContent="Verbindingsfout";
+  }
+}
 $("add").onclick=()=>{let m=modules.find(x=>x.id===$("modsel").value),a=[0,1,2,3].map(i=>$("a"+i).value.trim());if(!m||!$("cat").value.trim()||!$("q").value.trim()||a.some(x=>!x)){ $("msg").textContent="Vul alle velden in.";return}let item={id:"custom"+Date.now(),cat:$("cat").value.trim(),q:$("q").value.trim(),a,c:+$("correct").value,f:$("feed").value.trim()};custom[m.id]=custom[m.id]||[];custom[m.id].push(item);localStorage.setItem("customModules",JSON.stringify(custom));m.questions.push(item);$("msg").textContent="Vraag lokaal toegevoegd."}
 $("csv").onclick=()=>{let rs=JSON.parse(localStorage.getItem("results")||"[]");let csv="datum,module,score,goed,fout,instructie,onderwerp\n"+rs.map(r=>[r.date,r.title,r.score,r.ok,r.n-r.ok,r.instructionNeed?.answer||"",r.instructionNeed?.topic||""].map(v=>"\""+String(v).replaceAll("\"","\"\"")+"\"").join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="vakbekwaam-resultaten.csv";a.click()}
 $("clear").onclick=()=>{if(confirm("Alle lokale resultaten wissen?")){localStorage.removeItem("results");dash()}}

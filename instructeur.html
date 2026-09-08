@@ -267,7 +267,75 @@ th{
   <h2>Bestaande modules</h2>
   <div id="moduleList">Modules laden...</div>
 </div>
+<div class="card">
+  <h2>Nieuwe vraag toevoegen</h2>
 
+  <label>Module</label><br>
+  <select id="questionModule" style="padding:10px;border-radius:8px;margin:8px 0;width:100%;max-width:450px;">
+    <option value="">Kies een module</option>
+  </select>
+
+  <br>
+
+  <label>Onderwerp</label><br>
+  <input id="questionTopic" type="text" placeholder="Bijvoorbeeld: Motoren"
+    style="padding:10px;border-radius:8px;border:0;width:100%;max-width:450px;margin:8px 0;">
+
+  <br>
+
+  <label>Vraag</label><br>
+  <input id="questionText" type="text" placeholder="Typ hier de vraag"
+    style="padding:10px;border-radius:8px;border:0;width:100%;max-width:650px;margin:8px 0;">
+
+  <br>
+
+  <label>Antwoord A</label><br>
+  <input id="optionA" type="text"
+    style="padding:10px;border-radius:8px;border:0;width:100%;max-width:450px;margin:6px 0;">
+
+  <br>
+
+  <label>Antwoord B</label><br>
+  <input id="optionB" type="text"
+    style="padding:10px;border-radius:8px;border:0;width:100%;max-width:450px;margin:6px 0;">
+
+  <br>
+
+  <label>Antwoord C</label><br>
+  <input id="optionC" type="text"
+    style="padding:10px;border-radius:8px;border:0;width:100%;max-width:450px;margin:6px 0;">
+
+  <br>
+
+  <label>Antwoord D</label><br>
+  <input id="optionD" type="text"
+    style="padding:10px;border-radius:8px;border:0;width:100%;max-width:450px;margin:6px 0;">
+
+  <br>
+
+  <label>Juiste antwoord</label><br>
+  <select id="correctOption" style="padding:10px;border-radius:8px;margin:8px 0;">
+    <option value="">Kies</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+    <option value="C">C</option>
+    <option value="D">D</option>
+  </select>
+
+  <br>
+
+  <label>Uitleg na beantwoording</label><br>
+  <textarea id="questionExplanation" rows="4" placeholder="Leg uit waarom dit antwoord juist is"
+    style="padding:10px;border-radius:8px;border:0;width:100%;max-width:650px;margin:8px 0;"></textarea>
+
+  <br>
+
+  <button class="tab active" type="button" onclick="addQuestion()">
+    Vraag opslaan
+  </button>
+
+  <div id="questionMessage" style="margin-top:12px;"></div>
+</div>
 </section>
 
 <script>
@@ -515,7 +583,22 @@ async function loadModules(){
     }
 
     const modules=await response.json();
+const questionModule=document.getElementById("questionModule");
 
+if(questionModule){
+  const current=questionModule.value;
+
+  questionModule.innerHTML=
+    '<option value="">Kies een module</option>'+
+    modules
+      .filter(m=>m.active)
+      .map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`)
+      .join("");
+
+  if([...questionModule.options].some(o=>o.value===current)){
+    questionModule.value=current;
+  }
+}
     list.innerHTML=modules.length
       ? modules.map(m=>`
           <div class="row">
@@ -587,7 +670,79 @@ async function addModule(){
 }
 
 
+async function addQuestion(){
 
+  const moduleId = document.getElementById("questionModule").value;
+  const topic = document.getElementById("questionTopic").value.trim();
+  const question = document.getElementById("questionText").value.trim();
+  const optionA = document.getElementById("optionA").value.trim();
+  const optionB = document.getElementById("optionB").value.trim();
+  const optionC = document.getElementById("optionC").value.trim();
+  const optionD = document.getElementById("optionD").value.trim();
+  const correctOption = document.getElementById("correctOption").value;
+  const explanation = document.getElementById("questionExplanation").value.trim();
+  const message = document.getElementById("questionMessage");
+
+  if(!moduleId || !topic || !question || !optionA || !optionB ||
+     !optionC || !optionD || !correctOption){
+
+    message.innerHTML =
+      "<span style='color:#d85a5a;'>Vul alle verplichte velden in.</span>";
+
+    return;
+  }
+
+  try{
+
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/questions",
+      {
+        method:"POST",
+        headers:{
+          "apikey":SUPABASE_KEY,
+          "Authorization":"Bearer " + SUPABASE_KEY,
+          "Content-Type":"application/json",
+          "Prefer":"return=minimal"
+        },
+        body:JSON.stringify({
+          module_id:Number(moduleId),
+          question:question,
+          option_a:optionA,
+          option_b:optionB,
+          option_c:optionC,
+          option_d:optionD,
+          correct_option:correctOption,
+          explanation:explanation,
+          topic:topic,
+          active:true
+        })
+      }
+    );
+
+    if(!response.ok){
+      throw new Error(await response.text());
+    }
+
+    message.innerHTML =
+      "<span style='color:#2f9e63;'><strong>Vraag opgeslagen ✓</strong></span>";
+
+    document.getElementById("questionTopic").value="";
+    document.getElementById("questionText").value="";
+    document.getElementById("optionA").value="";
+    document.getElementById("optionB").value="";
+    document.getElementById("optionC").value="";
+    document.getElementById("optionD").value="";
+    document.getElementById("correctOption").value="";
+    document.getElementById("questionExplanation").value="";
+
+  }catch(error){
+
+    console.error(error);
+
+    message.innerHTML =
+      "<span style='color:#d85a5a;'>Vraag opslaan is niet gelukt.</span>";
+  }
+}
 loadDashboard();
 loadModules();
 

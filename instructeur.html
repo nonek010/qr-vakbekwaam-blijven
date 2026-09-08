@@ -233,34 +233,42 @@ th{
 </section>
 
 
+
+
+</div>
 <section id="beheer" class="panel">
 
 <div class="card">
+  <h2>Beheer modules</h2>
 
-<h2>Beheer</h2>
+  <p class="small">
+    Maak hier nieuwe oefenmodules aan voor Vakbekwaam Blijven.
+  </p>
 
-<p class="small">
-Hier komt het beheer van modules en vragen.
-Dit gedeelte bouwen we als volgende stap verder uit.
-</p>
+  <h3>Nieuwe module aanmaken</h3>
 
-<div class="row">
-<strong>Titan E-One</strong><br>
-Module actief
+  <input
+    id="newModuleName"
+    type="text"
+    placeholder="Bijvoorbeeld: Ademlucht"
+    style="padding:12px;border-radius:8px;border:0;width:100%;max-width:450px;margin-bottom:10px;"
+  >
+
+  <br>
+
+  <button class="tab active" type="button" onclick="addModule()">
+    Module aanmaken
+  </button>
+
+  <div id="moduleMessage" style="margin-top:12px;"></div>
 </div>
 
-<div class="row">
-<strong>Nieuwe modules</strong><br>
-Later kunnen hier onder andere PANTHER, tankautospuit,
-ademlucht, IBGS en andere vakbekwaamheidsonderwerpen worden toegevoegd.
-</div>
-
+<div class="card">
+  <h2>Bestaande modules</h2>
+  <div id="moduleList">Modules laden...</div>
 </div>
 
 </section>
-
-</div>
-
 
 <script>
 
@@ -486,8 +494,105 @@ return String(value)
 
 }
 
+async function loadModules(){
+
+  const list=document.getElementById("moduleList");
+
+  try{
+
+    const response=await fetch(
+      SUPABASE_URL+"/rest/v1/modules?select=*&order=created_at.desc",
+      {
+        headers:{
+          "apikey":SUPABASE_KEY,
+          "Authorization":"Bearer "+SUPABASE_KEY
+        }
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("Modules konden niet worden geladen");
+    }
+
+    const modules=await response.json();
+
+    list.innerHTML=modules.length
+      ? modules.map(m=>`
+          <div class="row">
+            <strong>${escapeHtml(m.name)}</strong><br>
+            <span class="small">${m.active ? "Actief" : "Niet actief"}</span>
+          </div>
+        `).join("")
+      : "<div class='small'>Nog geen modules aangemaakt.</div>";
+
+  }catch(error){
+
+    list.innerHTML=
+      "<div class='error'>Modules konden niet worden geladen.</div>";
+
+    console.error(error);
+  }
+}
+
+
+async function addModule(){
+
+  const input=document.getElementById("newModuleName");
+  const message=document.getElementById("moduleMessage");
+
+  const name=input.value.trim();
+
+  if(!name){
+    message.innerHTML="<span class='error'>Vul eerst een modulenaam in.</span>";
+    return;
+  }
+
+  try{
+
+    const response=await fetch(
+      SUPABASE_URL+"/rest/v1/modules",
+      {
+        method:"POST",
+        headers:{
+          "apikey":SUPABASE_KEY,
+          "Authorization":"Bearer "+SUPABASE_KEY,
+          "Content-Type":"application/json",
+          "Prefer":"return=minimal"
+        },
+        body:JSON.stringify({
+          name:name,
+          active:true
+        })
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("Module kon niet worden opgeslagen");
+    }
+
+    input.value="";
+
+    message.innerHTML=
+      "<span style='color:#2f9e63'><strong>Module aangemaakt ✓</strong></span>";
+
+    await loadModules();
+
+  }catch(error){
+
+    message.innerHTML=
+      "<span class='error'>Opslaan is niet gelukt.</span>";
+
+    console.error(error);
+  }
+}
+
+
 
 loadDashboard();
+loadModules();
+
+
+
 
 </script>
 

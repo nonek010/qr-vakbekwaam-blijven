@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructeursomgeving | Vakbekwaam Blijven</title>
+
+<style>
+:root{
+  --bg:#101820;
+  --panel:#18232d;
+  --panel2:#22313d;
+  --text:#f5f7fa;
+  --muted:#aeb9c4;
+  --yellow:#f5c518;
+  --green:#2f9e63;
+  --red:#d85a5a;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.wrap{
+  max-width:1200px;
+  margin:auto;
+  padding:18px;
+}
+
+header{
+  padding:26px;
+  background:var(--panel);
+  border-radius:18px;
+  margin-bottom:18px;
+}
+
+.eyebrow{
+  color:var(--yellow);
+  font-weight:bold;
+  letter-spacing:1px;
+}
+
+h1{margin:8px 0}
+h2{margin-top:0}
+
+.small{
+  color:var(--muted);
+}
+
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+}
+
+.tab{
+  border:0;
+  padding:12px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.tab.active{
+  background:var(--yellow);
+}
+
+.panel{
+  display:none;
+}
+
+.panel.active{
+  display:block;
+}
+
+.card{
+  background:var(--panel);
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:16px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px;
+  margin:18px 0;
+}
+
+.metric{
+  background:var(--panel2);
+  border-radius:14px;
+  padding:18px;
+}
+
+.big{
+  font-size:32px;
+  font-weight:bold;
+  margin-top:5px;
+}
+
+.row{
+  background:var(--panel2);
+  padding:12px;
+  border-radius:10px;
+  margin:8px 0;
+}
+
+select{
+  padding:10px;
+  border-radius:8px;
+  margin:5px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:10px;
+  text-align:left;
+  border-bottom:1px solid #40505c;
+}
+
+th{
+  color:var(--yellow);
+}
+
+.error{
+  color:#ff8b8b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">INSTRUCTEURSOMGEVING</div>
+  <h1>Vakbekwaam Blijven</h1>
+  <div class="small">
+    Meten • Analyseren • Gerichte instructie • Opnieuw meten
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('dashboard',this)">Dashboard</button>
+  <button class="tab" onclick="showTab('beheer',this)">Beheer</button>
+</div>
+
+<section id="dashboard" class="panel active">
+
+<div class="card">
+  <h2>Instructeursdashboard</h2>
+
+  <div>
+    <label>Periode:</label>
+    <select id="period" onchange="loadDashboard()">
+      <option value="all">Alles</option>
+      <option value="30">Laatste 30 dagen</option>
+      <option value="7">Laatste 7 dagen</option>
+    </select>
+
+    <label>Module:</label>
+    <select id="moduleFilter" onchange="renderDashboard()">
+      <option value="all">Alle modules</option>
+    </select>
+  </div>
+
+  <div class="grid">
+
+    <div class="metric">
+      <div class="small">Gemaakte oefeningen</div>
+      <div id="count" class="big">0</div>
+    </div>
+
+    <div class="metric">
+      <div class="small">Gemiddelde score</div>
+      <div id="avg" class="big">-</div>
+    </div>
+
+    <div class="metric">
+      <div class="small">Grootste leerbehoefte</div>
+      <div id="weak" class="big">-</div>
+    </div>
+
+    <div class="metric">
+      <div class="small">Extra instructie gevraagd</div>
+      <div id="extra" class="big">0</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="card">
+  <h2>Resultaten per onderwerp</h2>
+  <div id="topics">Laden...</div>
+</div>
+
+<div class="card">
+  <h2>Behoefte aan extra instructie</h2>
+  <div id="needs">Laden...</div>
+</div>
+
+<div class="card">
+  <h2>Recente resultaten</h2>
+
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Module</th>
+          <th>Score</th>
+          <th>Fout op</th>
+          <th>Extra instructie</th>
+        </tr>
+      </thead>
+
+      <tbody id="resultsTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+</section>
+
+
+<section id="beheer" class="panel">
+
+<div class="card">
+
+<h2>Beheer</h2>
+
+<p class="small">
+Hier komt het beheer van modules en vragen.
+Dit gedeelte bouwen we als volgende stap verder uit.
+</p>
+
+<div class="row">
+<strong>Titan E-One</strong><br>
+Module actief
+</div>
+
+<div class="row">
+<strong>Nieuwe modules</strong><br>
+Later kunnen hier onder andere PANTHER, tankautospuit,
+ademlucht, IBGS en andere vakbekwaamheidsonderwerpen worden toegevoegd.
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<script>
+
+/* PLAK HIER JOUW TWEE SUPABASE-REGELS */
+const SUPABASE_URL = "https://ywwbznguptxvxcglvorx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_bMBMEVhQ5gm88t6s339a8A_Y3ne6sHl";
+
+let allResults=[];
+
+
+function showTab(id,button){
+
+document.querySelectorAll(".panel")
+.forEach(x=>x.classList.remove("active"));
+
+document.querySelectorAll(".tab")
+.forEach(x=>x.classList.remove("active"));
+
+document.getElementById(id).classList.add("active");
+
+button.classList.add("active");
+
+}
+
+
+async function loadDashboard(){
+
+try{
+
+const response=await fetch(
+SUPABASE_URL+"/rest/v1/quiz_results?select=*&order=created_at.desc",
+{
+headers:{
+"apikey":SUPABASE_KEY,
+"Authorization":"Bearer "+SUPABASE_KEY
+}
+}
+);
+
+if(!response.ok){
+throw new Error("Database kon niet worden geladen");
+}
+
+allResults=await response.json();
+
+fillModules();
+
+renderDashboard();
+
+}
+
+catch(error){
+
+document.getElementById("topics").innerHTML=
+"<div class='error'>Verbindingsfout met database.</div>";
+
+console.error(error);
+
+}
+
+}
+
+
+function fillModules(){
+
+const select=document.getElementById("moduleFilter");
+
+const current=select.value;
+
+const modules=[...new Set(
+allResults.map(r=>r.module).filter(Boolean)
+)];
+
+select.innerHTML='<option value="all">Alle modules</option>';
+
+modules.forEach(m=>{
+
+const option=document.createElement("option");
+
+option.value=m;
+option.textContent=m;
+
+select.appendChild(option);
+
+});
+
+if([...select.options].some(o=>o.value===current)){
+select.value=current;
+}
+
+}
+
+
+function renderDashboard(){
+
+let rows=[...allResults];
+
+const period=document.getElementById("period").value;
+const module=document.getElementById("moduleFilter").value;
+
+if(period!=="all"){
+
+const limit=new Date();
+
+limit.setDate(limit.getDate()-Number(period));
+
+rows=rows.filter(r=>new Date(r.created_at)>=limit);
+
+}
+
+if(module!=="all"){
+
+rows=rows.filter(r=>r.module===module);
+
+}
+
+
+document.getElementById("count").textContent=rows.length;
+
+
+const average=rows.length
+? Math.round(
+rows.reduce((sum,r)=>sum+(Number(r.percentage)||0),0)/rows.length
+)
+:0;
+
+document.getElementById("avg").textContent=
+rows.length ? average+"%" : "-";
+
+
+const topicCounts={};
+
+rows.forEach(r=>{
+
+if(!r.wrong_topics)return;
+
+r.wrong_topics
+.split(",")
+.map(x=>x.trim())
+.filter(Boolean)
+.forEach(topic=>{
+
+topicCounts[topic]=(topicCounts[topic]||0)+1;
+
+});
+
+});
+
+
+const sortedTopics=
+Object.entries(topicCounts)
+.sort((a,b)=>b[1]-a[1]);
+
+
+document.getElementById("weak").textContent=
+sortedTopics.length
+? sortedTopics[0][0]
+: "-";
+
+
+document.getElementById("topics").innerHTML=
+sortedTopics.length
+? sortedTopics.map(([topic,count])=>
+`<div class="row"><strong>${escapeHtml(topic)}</strong> — ${count}× fout</div>`
+).join("")
+:"<div class='small'>Geen fouten geregistreerd.</div>";
+
+
+const instructionRows=
+rows.filter(r=>r.extra_instruction===true);
+
+
+document.getElementById("extra").textContent=
+instructionRows.length;
+
+
+document.getElementById("needs").innerHTML=
+instructionRows.length
+? instructionRows.map(r=>
+`<div class="row">
+<strong>${escapeHtml(r.module||"Module")}</strong><br>
+${escapeHtml(r.instruction_topic||"Geen onderwerp ingevuld")}
+</div>`
+).join("")
+:"<div class='small'>Geen extra instructie gevraagd.</div>";
+
+
+document.getElementById("resultsTable").innerHTML=
+rows.length
+? rows.slice(0,25).map(r=>{
+
+const date=r.created_at
+? new Date(r.created_at).toLocaleDateString("nl-NL")
+:"-";
+
+return `
+<tr>
+<td>${date}</td>
+<td>${escapeHtml(r.module||"-")}</td>
+<td>${Number(r.percentage)||0}%</td>
+<td>${escapeHtml(r.wrong_topics||"Geen")}</td>
+<td>${
+r.extra_instruction
+? "Ja — "+escapeHtml(r.instruction_topic||"")
+: "Nee"
+}</td>
+</tr>`;
+
+}).join("")
+:"<tr><td colspan='5'>Nog geen resultaten.</td></tr>";
+
+}
+
+
+function escapeHtml(value){
+
+return String(value)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+}
+
+
+loadDashboard();
+
+</script>
+
+</body>
+</html>

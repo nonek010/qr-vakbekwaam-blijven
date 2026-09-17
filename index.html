@@ -56,6 +56,63 @@ let custom=JSON.parse(localStorage.getItem("customModules")||"{}");if(custom.tit
 let run=null;const $=id=>document.getElementById(id);const shuffle=a=>a.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 document.querySelectorAll(".tab[data-tab]").forEach(b=>b.onclick=()=>show(b.dataset.tab));
 function show(id){document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===id));document.querySelectorAll(".tab[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));if(id==="dashboard")dash()}
+async function loadOnlineModules(){
+
+  try{
+
+    const modResponse = await fetch(
+      SUPABASE_URL + "/rest/v1/modules?select=*&active=eq.true&order=created_at.asc",
+      {
+        headers:{
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY
+        }
+      }
+    );
+
+    const onlineModules = await modResponse.json();
+
+    for(const om of onlineModules){
+
+      const qResponse = await fetch(
+        SUPABASE_URL + "/rest/v1/questions?select=*&module_id=eq." + om.id + "&active=eq.true",
+        {
+          headers:{
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + SUPABASE_KEY
+          }
+        }
+      );
+
+      const onlineQuestions = await qResponse.json();
+
+      const questions = onlineQuestions.map(q => ({
+        id: "db-" + q.id,
+        cat: q.topic || "Algemeen",
+        q: q.question,
+        a: [q.option_a, q.option_b, q.option_c, q.option_d],
+        c: ["A","B","C","D"].indexOf(q.correct_option),
+        f: q.explanation || ""
+      }));
+
+      if(!modules.some(m => m.id === "db-" + om.id)){
+        modules.push({
+          id: "db-" + om.id,
+          title: om.name,
+          status: "ACTIEF",
+          active: true,
+          questions: questions
+        });
+      }
+    }
+
+    renderMods();
+
+  }catch(error){
+    console.error("Online modules laden mislukt:", error);
+    renderMods();
+  }
+}
 function renderMods(){ $("modules").innerHTML="";modules.forEach(m=>{let d=document.createElement("div");d.className="module"+(m.active?" active":"");d.innerHTML="<div><b>"+m.title+"</b><div class='status "+(m.active?"on":"")+"'>"+m.status+"</div></div><div class='small'>"+(m.questions?m.questions.length+" vragen":"Nieuwe module volgt")+"</div>";if(m.active){let b=document.createElement("button");b.className="btn";b.textContent="Open module";b.onclick=()=>pickMode(m);d.appendChild(b)}$("modules").appendChild(d)});$("modsel").innerHTML=modules.filter(m=>m.questions).map(m=>"<option value='"+m.id+"'>"+m.title+"</option>").join("")}
 function pickMode(m){$("moduleHome").classList.add("hidden");$("modePick").classList.remove("hidden");$("modePick").innerHTML="<div class='placeholder'>Titan E-One</div><h2>"+m.title+"</h2><p class='small'>Kies een oefenvorm.</p><div class='actions'><button class='btn' id='full'>Volledige oefening — 25 vragen</button><button class='btn' id='quick'>Snelle oefening — 10 willekeurige vragen</button><button class='btn secondary' id='retry'>Opnieuw oefenen van fout beantwoorde vragen</button></div>";$("full").onclick=()=>start(m,shuffle([...m.questions]));$("quick").onclick=()=>start(m,shuffle([...m.questions]).slice(0,10));let wrong=getWrong(m.id);$("retry").disabled=!wrong.length;$("retry").onclick=()=>start(m,shuffle(m.questions.filter(q=>wrong.includes(q.id))))}
 function getWrong(module){let rs=JSON.parse(localStorage.getItem("results")||"[]"),s=new Set();rs.filter(r=>r.module===module).forEach(r=>r.wrongIds.forEach(id=>s.add(id)));return [...s]}
@@ -152,5 +209,5 @@ $("add").onclick=()=>{let m=modules.find(x=>x.id===$("modsel").value),a=[0,1,2,3
 $("csv").onclick=()=>{let rs=JSON.parse(localStorage.getItem("results")||"[]");let csv="datum,module,score,goed,fout,instructie,onderwerp\n"+rs.map(r=>[r.date,r.title,r.score,r.ok,r.n-r.ok,r.instructionNeed?.answer||"",r.instructionNeed?.topic||""].map(v=>"\""+String(v).replaceAll("\"","\"\"")+"\"").join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="vakbekwaam-resultaten.csv";a.click()}
 $("clear").onclick=()=>{if(confirm("Alle lokale resultaten wissen?")){localStorage.removeItem("results");dash()}}
 $("qrarea").innerHTML="<img alt='QR-code naar QR Vakbekwaam Blijven' style='width:240px;max-width:100%;background:#fff;padding:10px;border-radius:12px' src='https://api.qrserver.com/v1/create-qr-code/?size=360x360&data="+encodeURIComponent("https://nonek010.github.io/qr-vakbekwaam-blijven/")+"'><p class='small'>https://nonek010.github.io/qr-vakbekwaam-blijven/</p>";
-renderMods();dash();
+loadOnlineModules();dash();
 </script></body></html>

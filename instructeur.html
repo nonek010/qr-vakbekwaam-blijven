@@ -605,6 +605,7 @@ if(questionModule){
             <strong>${escapeHtml(m.name)}</strong><br>
             <span class="small">${m.active ? "Actief" : "Niet actief"}</span>
             <button type="button" onclick="toggleModule(${m.id}, ${m.active})">${m.active ? "Deactiveren" : "Activeren"}</button>
+            <button type="button" onclick="renameModule(${m.id}, '${escapeHtml(m.name)}')">Naam wijzigen</button>
             <button type="button" onclick="manageQuestions(${m.id}, '${escapeHtml(m.name)}')">Vragen beheren</button>
           </div>
         `).join("")
@@ -619,6 +620,43 @@ if(questionModule){
   }
 }
 
+async function renameModule(id, oldName){
+
+  const newName = prompt("Nieuwe naam voor de module:", oldName);
+
+  if(!newName || !newName.trim()){
+    return;
+  }
+
+  try{
+
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/modules?id=eq." + id,
+      {
+        method:"PATCH",
+        headers:{
+          "apikey":SUPABASE_KEY,
+          "Authorization":"Bearer " + SUPABASE_KEY,
+          "Content-Type":"application/json",
+          "Prefer":"return=minimal"
+        },
+        body:JSON.stringify({
+          name:newName.trim()
+        })
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("Naam kon niet worden gewijzigd");
+    }
+
+    await loadModules();
+
+  }catch(error){
+    console.error(error);
+    alert("De modulenaam kon niet worden gewijzigd.");
+  }
+}  
 async function toggleModule(id, isActive){
 
   try{

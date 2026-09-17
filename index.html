@@ -136,7 +136,7 @@ wrong_topics:Object.keys(cats).filter(k=>cats[k].ok < cats[k].n).join(", "),
 extra_instruction:v.value==="Ja",
 instruction_topic:$("needTopic").value.trim()
 })
-}).catch(err=>console.error("Supabase fout:",err));show("dashboard")};$("again").onclick=()=>pickMode(run.m)}
+}).catch(err=>console.error("Supabase fout:",err));show("modules")};$("again").onclick=()=>pickMode(run.m)}
 async function dash(){
   try{
     const response=await fetch(

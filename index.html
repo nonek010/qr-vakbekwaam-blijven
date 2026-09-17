@@ -51,7 +51,8 @@ const titanQuestions=[
 ["Haspels","Welke combinatie klopt voor de middendrukhaspel?","265 l/min bij 14 bar en 60 m slang","115 l/min bij 40 bar en 90 m slang","2,3–3,3 kg/s en 30 m slang","5.000 l/min bij 14 bar",0,"De middendrukhaspel levert 265 l/min bij 14 bar en heeft 60 meter slang."],
 ["Poederinstallatie","Welke combinatie klopt voor de poederhaspel?","2,3–3,3 kg/s en 30 m slang","8 kg/s en 90 m slang","250 kg/s en 60 m slang","115 l/min en 30 m slang",0,"De poederhaspel geeft 2,3–3,3 kg/s af en heeft 30 meter slang."]
 ].map((x,i)=>({id:"t"+(i+1),cat:x[0],q:x[1],a:x.slice(2,6),c:x[6],f:x[7]}));
-const modules=[{id:"titan",title:"Titan E-One",status:"ACTIEF",active:true,questions:titanQuestions},{id:"tas",title:"Tankautospuit",status:"Binnenkort"},{id:"vliegtuig",title:"Vliegtuigkennis",status:"Binnenkort"},{id:"crash",title:"Crashkaarten",status:"Binnenkort"},{id:"alarm",title:"Alarmcentrale",status:"Binnenkort"},{id:"adem",title:"Ademlucht",status:"Binnenkort"},{id:"ibgs",title:"IBGS",status:"Binnenkort"},{id:"hv",title:"HV/THV",status:"Binnenkort"},{id:"kpi",title:"KPI-voorbereiding",status:"Binnenkort"}];
+const modules=[
+  {id:"titan",title:"Titan E-One",status:"ACTIEF",active:true,questions:titanQuestions}
 let custom=JSON.parse(localStorage.getItem("customModules")||"{}");if(custom.titan) modules[0].questions=[...titanQuestions,...custom.titan];
 let run=null;const $=id=>document.getElementById(id);const shuffle=a=>a.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 document.querySelectorAll(".tab[data-tab]").forEach(b=>b.onclick=()=>show(b.dataset.tab));

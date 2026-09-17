@@ -605,6 +605,7 @@ if(questionModule){
             <strong>${escapeHtml(m.name)}</strong><br>
             <span class="small">${m.active ? "Actief" : "Niet actief"}</span>
             <button type="button" onclick="toggleModule(${m.id}, ${m.active})">${m.active ? "Deactiveren" : "Activeren"}</button>
+            <button type="button" onclick="manageQuestions(${m.id}, '${escapeHtml(m.name)}')">Vragen beheren</button>
           </div>
         `).join("")
       : "<div class='small'>Nog geen modules aangemaakt.</div>";
@@ -649,7 +650,26 @@ async function toggleModule(id, isActive){
     alert("De module kon niet worden aangepast.");
   }
 }
-async function addModule(){
+function manageQuestions(moduleId, moduleName){
+
+  const questionModule = document.getElementById("questionModule");
+
+  if(questionModule){
+    questionModule.value = String(moduleId);
+  }
+
+  const questionText = document.getElementById("questionText");
+
+  if(questionText){
+    questionText.scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+    questionText.focus();
+  }
+}
+  
+  async function addModule(){
 
   const input=document.getElementById("newModuleName");
   const message=document.getElementById("moduleMessage");

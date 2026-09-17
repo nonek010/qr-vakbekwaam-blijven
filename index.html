@@ -53,6 +53,7 @@ const titanQuestions=[
 ].map((x,i)=>({id:"t"+(i+1),cat:x[0],q:x[1],a:x.slice(2,6),c:x[6],f:x[7]}));
 const modules=[
   {id:"titan",title:"Titan E-One",status:"ACTIEF",active:true,questions:titanQuestions}
+ ];
 let custom=JSON.parse(localStorage.getItem("customModules")||"{}");if(custom.titan) modules[0].questions=[...titanQuestions,...custom.titan];
 let run=null;const $=id=>document.getElementById(id);const shuffle=a=>a.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 document.querySelectorAll(".tab[data-tab]").forEach(b=>b.onclick=()=>show(b.dataset.tab));

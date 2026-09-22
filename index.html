@@ -75,7 +75,7 @@ async function loadOnlineModules(){
     for(const om of onlineModules){
 
       const qResponse = await fetch(
-        SUPABASE_URL + "/rest/v1/questions?select=*&module_id=eq." + om.id + "&active=eq.true",
+        SUPABASE_URL + "/rest/v1/questions?select=*&module_id=eq." + om.id,
         {
           headers:{
             "apikey": SUPABASE_KEY,
@@ -86,7 +86,7 @@ async function loadOnlineModules(){
 
       const onlineQuestions = await qResponse.json();
 
-      const questions = om.name === "Titan E-One"
+      const questions = (om.name === "Titan E-One" || om.name === "E-ONE")
   ? titanQuestions
   : onlineQuestions.map(q => ({
         id: "db-" + q.id,
@@ -116,7 +116,7 @@ async function loadOnlineModules(){
   }
 }
 function renderMods(){ $("modules").innerHTML="";modules.forEach(m=>{let d=document.createElement("div");d.className="module"+(m.active?" active":"");d.innerHTML="<div><b>"+m.title+"</b><div class='status "+(m.active?"on":"")+"'>"+m.status+"</div></div><div class='small'>"+(m.questions?m.questions.length+" vragen":"Nieuwe module volgt")+"</div>";if(m.active){let b=document.createElement("button");b.className="btn";b.textContent="Open module";b.onclick=()=>pickMode(m);d.appendChild(b)}$("modules").appendChild(d)});$("modsel").innerHTML=modules.filter(m=>m.questions).map(m=>"<option value='"+m.id+"'>"+m.title+"</option>").join("")}
-function pickMode(m){$("moduleHome").classList.add("hidden");$("modePick").classList.remove("hidden");$("modePick").innerHTML="<div class='placeholder'>"+m.title+"</div><h2>"+m.title+"</h2><p class='small'>Kies een oefenvorm.</p><div class='actions'><button class='btn' id='full'>Volledige oefening — 25 vragen</button><button class='btn' id='quick'>Snelle oefening — 10 willekeurige vragen</button><button class='btn secondary' id='retry'>Opnieuw oefenen van fout beantwoorde vragen</button></div>";$("full").onclick=()=>start(m,shuffle([...m.questions]));$("quick").onclick=()=>start(m,shuffle([...m.questions]).slice(0,10));let wrong=getWrong(m.id);$("retry").disabled=!wrong.length;$("retry").onclick=()=>start(m,shuffle(m.questions.filter(q=>wrong.includes(q.id))))}
+function pickMode(m){$("moduleHome").classList.add("hidden");$("modePick").classList.remove("hidden");$("modePick").innerHTML="<div class='placeholder'>"+m.title+"</div><h2>"+m.title+"</h2><p class='small'>Kies een oefenvorm.</p><div class='actions'><button class='btn' id='full'>Volledige oefening — "+m.questions.length+" vragen</button><button class='btn' id='quick'>Snelle oefening — 10 willekeurige vragen</button><button class='btn secondary' id='retry'>Opnieuw oefenen van fout beantwoorde vragen</button></div>";$("full").onclick=()=>start(m,shuffle([...m.questions]));$("quick").onclick=()=>start(m,shuffle([...m.questions]).slice(0,10));let wrong=getWrong(m.id);$("retry").disabled=!wrong.length;$("retry").onclick=()=>start(m,shuffle(m.questions.filter(q=>wrong.includes(q.id))))}
 function getWrong(module){let rs=JSON.parse(localStorage.getItem("results")||"[]"),s=new Set();rs.filter(r=>r.module===module).forEach(r=>r.wrongIds.forEach(id=>s.add(id)));return [...s]}
 function start(m,qs){run={m,qs,i:0,answers:[]};$("modePick").classList.add("hidden");$("quiz").classList.remove("hidden");question()}
 function question(){let q=run.qs[run.i],opts=shuffle(q.a.map((text,old)=>({text,old})));run.currentOpts=opts;let box=$("quiz"),pct=Math.round(run.i/run.qs.length*100);box.innerHTML="<div class='small'>Vraag "+(run.i+1)+" van "+run.qs.length+" • "+q.cat+"</div><div class='progress'><span style='width:"+pct+"%'></span></div><h2>"+q.q+"</h2>"+opts.map((o,i)=>"<label class='option'><input type='radio' name='ans' value='"+i+"'> "+o.text+"</label>").join("");let b=document.createElement("button");b.className="btn";b.textContent="Antwoord controleren";b.onclick=()=>answer(q);box.appendChild(b)}

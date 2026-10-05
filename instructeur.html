@@ -407,7 +407,7 @@ const select=document.getElementById("moduleFilter");
 const current=select.value;
 
 const modules=[...new Set(
-allResults.map(r=>r.module).filter(Boolean)
+["CRS – Pictogrammen", ...allResults.map(r=>r.module).filter(Boolean)]
 )];
 
 select.innerHTML='<option value="all">Alle modules</option>';
